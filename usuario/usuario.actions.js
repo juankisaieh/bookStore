@@ -13,12 +13,19 @@ async function getUserMongo(data) {
 }
 
 async function updateUserMongo(id, cambios) {
-  const resultado = await Producto.findByIdAndUpdate(id, cambios)
+  const resultado = await Usuario.findByIdAndUpdate(id, cambios)
+  return resultado
+}
+
+async function deleteUserMongo(user) {
+  const resultado = await Usuario.delete(user)
+  return resultado
 }
 
 
 module.exports = {
   createUserMongo,
   getUserMongo,
-  updateUserMongo
+  updateUserMongo,
+  deleteUserMongo
 }

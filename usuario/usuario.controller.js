@@ -1,7 +1,7 @@
 const argon2 = require('argon2')
 var jwt = require('jsonwebtoken');
 
-const { createUserMongo, getUserMongo, updateUserMongo } = require("./usuario.actions")
+const { createUserMongo, getUserMongo, updateUserMongo, deleteUserMongo } = require("./usuario.actions")
 const { throwCustomError, respondWithError } = require("../utils/functions")
 
 async function createUser(data) {
@@ -18,9 +18,8 @@ async function createUser(data) {
 
 async function loginController(data) {
   const { password } = data
-
   const user = await getUserMongo(data)
-  
+  console.log(user);
   if (await argon2.verify(user.password, password)) {
     // generate jwt
     return await jwt.sign({user: user}, process.env.JWT_SECRET)
@@ -41,14 +40,24 @@ async function readUser(req) {
   }
 }
 
-async function updateUser(data) {
+async function updateUser(req) {
   const token = req.header('Authorization')
-  const signedUser = jwt.verify(token, process.env.JWT_SECRET)
+  const signedUser = jwt.verify(token, process.env.JWT_SECRET).user
   
   if (signedUser) {
-    const { _id, ...cambios } = datos
-    const updatedUser = updateUserMongo(id, cambios)
+    console.log(signedUser._id, req.body)
+    const updatedUser = updateUserMongo(signedUser._id, req.body)
     return updatedUser
+  } else {
+    throwCustomError(401, "Anauthorized")
+  }
+}
+
+async function softDeleteUser(req) {
+  const token = req.header('Authorization')
+  const signedUser = jwt.verify(token, process.env.JWT_SECRET).user
+  if (signedUser) {
+    return deleteUserMongo(signedUser)
   } else {
     throwCustomError(401, "Anauthorized")
   }
@@ -58,5 +67,6 @@ module.exports = {
   createUser,
   loginController,
   readUser,
-  updateUser
+  updateUser,
+  softDeleteUser
 }
